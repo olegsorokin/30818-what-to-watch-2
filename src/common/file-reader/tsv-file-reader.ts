@@ -1,59 +1,34 @@
-import { readFileSync } from 'fs';
+import EventEmitter from 'events';
 import { FileReaderInterface } from './file-reader.interface.js';
+import { createReadStream } from 'fs';
 
-export default class TSVFileReader implements FileReaderInterface {
-  private rawData = '';
-
+export default class TSVFileReader extends EventEmitter implements FileReaderInterface {
   constructor(public fileName: string) {
+    super();
   }
 
-  public read(): void {
-    this.rawData = readFileSync(this.fileName, { encoding: 'utf-8' });
-  }
+  public async read(): Promise<void> {
+    const stream = createReadStream(this.fileName, {
+      highWaterMark: 16384,
+      encoding: 'utf-8',
+    });
 
-  public toArray() {
-    if (!this.rawData) {
-      return [];
+    let lineRead = '';
+    let endLinePosition = -1;
+    let importedRowCount = 0;
+
+    for await (const chunk of stream) {
+      lineRead += chunk.toString();
+
+      while ((endLinePosition = lineRead.indexOf('\n')) >= 0) {
+        const completeRow = lineRead.slice(0, endLinePosition + 1);
+        lineRead = lineRead.slice(++endLinePosition);
+        importedRowCount++;
+
+        this.emit('line', completeRow);
+      }
     }
 
-    console.log(this.rawData.split('\n'));
-
-    return this.rawData
-      .split('\n')
-      .filter((row) => row.trim() !== '')
-      .map((line) => line.split('\t'))
-      .map(([
-        name,
-        description,
-        publicationDate,
-        released,
-        genre,
-        rating,
-        previewVideoLink,
-        videoLink,
-        starring,
-        director,
-        duration,
-        commentsCount,
-        posterImage,
-        backgroundImage,
-        backgroundColor
-      ]) => ({
-        name,
-        description,
-        publicationDate: Number.parseInt(publicationDate, 10),
-        released: Number.parseInt(released, 10),
-        genre,
-        rating: Number.parseInt(rating, 10),
-        previewVideoLink,
-        videoLink,
-        starring: starring.split(';'),
-        director,
-        duration: Number.parseInt(duration, 10),
-        commentsCount: Number.parseInt(commentsCount, 10),
-        posterImage,
-        backgroundImage,
-        backgroundColor
-      }));
+    this.emit('end', importedRowCount);
   }
 }
