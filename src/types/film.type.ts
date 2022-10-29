@@ -1,4 +1,4 @@
-import { Genre } from './genre.js';
+import { Genre } from './genre.type.js';
 
 export type Film = {
   name: string;
