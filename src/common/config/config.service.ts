@@ -1,9 +1,11 @@
+import 'reflect-metadata';
+
 import { config } from 'dotenv';
 import { inject } from 'inversify';
 import { ConfigInterface } from './config.interface.js';
 import { LoggerInterface } from '../logger/logger.interface.js';
 import { configSchema, ConfigSchema } from './config.schema.js';
-import { Component } from '../../types/component.types';
+import { Component } from '../../types/component.types.js';
 
 export default class ConfigService implements ConfigInterface {
   private config: ConfigSchema;
