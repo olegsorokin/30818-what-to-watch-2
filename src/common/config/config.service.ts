@@ -1,6 +1,6 @@
 import { config, DotenvParseOutput } from 'dotenv';
 import { ConfigInterface } from './config.interface.js';
-import { LoggerInterface } from '../logger/logger.interface';
+import { LoggerInterface } from '../logger/logger.interface.js';
 
 export default class ConfigService implements ConfigInterface {
   private config: DotenvParseOutput;
